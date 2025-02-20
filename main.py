@@ -69,9 +69,9 @@ class Sale(Base):
 
 type_db = "postgresql"
 login = "postgres"
-password = "2573544"
+password = "postgres"
 host = "localhost:5432"
-name_db = "clients_db"
+name_db = "bookstore"
 
 DSN = f'{type_db}://{login}:{password}@{host}/{name_db}'
 engine = sqlalchemy.create_engine(DSN)
@@ -130,30 +130,21 @@ session.add_all([sale_1, sale_2, sale_3, sale_4, sale_5, sale_6, sale_7, sale_8,
 session.commit()
 session.close()
 
-
-
-def author_sales(name):
-    type_db = "postgresql"
-    login = "postgres"
-    password = "2573544"
-    host = "localhost:5432"
-    name_db = "clients_db"
-
-    DSN = f'{type_db}://{login}:{password}@{host}/{name_db}'
-    engine = sqlalchemy.create_engine(DSN)
-
-    Session = sessionmaker(bind=engine)
+def get_shops(filter_string):
     session = Session()
-
-    query = session.query(Book.title, Shop.name, Sale.price, Sale.date_sale)\
-    .join(Publisher, Book.id_publisher == Publisher.id)\
+    query = session.query(Book.title, Shop.name, Sale.price, Sale.date_sale
+    ).join(Publisher, Book.id_publisher == Publisher.id)\
     .join(Stock, Book.id == Stock.id_book)\
     .join(Shop, Shop.id == Stock.id_shop)\
-    .join(Sale, Sale.id_stock == Stock.id)\
-    .filter(Publisher.name.like('Пушкин Александр Сергеевич')).all()
-    session.close()
-    for row in query:
-        print(f'{row[0]}|{row[1]}|{row[2]}')
+    .join(Sale, Sale.id_stock == Stock.id)
+    if filter_string.isdigit():
+        sub_query = query.filter(Publisher.id == filter_string).all()
+    else:
+        sub_query = query.filter(Publisher.name == filter_string).all()
+    for Title, Shop_name, Price, Date_sale in sub_query:
+        print(f"{Title: <30} | {Shop_name: <10} | {Price: <8} | {Date_sale.strftime('%d-%m-%Y')}")
     session.close()
 
-author_sales('Пушкин Александр Сергеевич')
+if __name__ == "__main__":
+    get_shops('Гоголь Николай Ваильевич')
+    get_shops('2')
